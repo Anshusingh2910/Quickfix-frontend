@@ -7,5 +7,5 @@ export default defineConfig({
         react(),
         tailwindcss(),
     ],
-    base: "/Quick-fix-frontend/",
+    base: "/Quickfix-frontend/",
 });
