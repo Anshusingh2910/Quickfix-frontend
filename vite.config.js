@@ -3,9 +3,10 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-    base: "/Quickfix-frontend/",
     plugins: [
         react(),
         tailwindcss(),
     ],
+
+    base: "/Quickfix-frontend/",
 });
