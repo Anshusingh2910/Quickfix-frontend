@@ -1,17 +1,14 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
-
-if (!API_URL) {
-  console.error("VITE_API_URL is not defined.");
-}
+const API_URL =
+    import.meta.env.VITE_API_URL ||
+    "https://quick-fix-1.onrender.com";
 
 const api = axios.create({
-  baseURL: API_URL,
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
+    baseURL: API_URL,
+    headers: {
+        "Content-Type": "application/json",
+    },
 });
 
 const getAccessToken = () => {
