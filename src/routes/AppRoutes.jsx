@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // Layouts
-import Layout from "../layouts/Layout";
+import Layout from "../layouts/layout";
 import AuthLayout from "../layouts/AuthLayout";
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -19,7 +19,7 @@ import VerifyOTP from "../pages/auth/VerifyOTP";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 
 // User Pages
-import UserDashboard from "../pages/User/Dashboard";
+import UserDashboard from "../pages/user/Dashboard";
 import Profile from "../pages/user/Profile";
 
 import CreateBooking from "../pages/user/Bookings";
