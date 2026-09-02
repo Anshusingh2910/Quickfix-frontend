@@ -64,7 +64,7 @@ function NotFound() {
 
 function AppRoutes() {
     return (
-        <BrowserRouter>
+        <BrowserRouter basename="/Quickfix-frontend">
             <Routes>
 
                 {/* =================================================
