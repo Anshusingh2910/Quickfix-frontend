@@ -1,16 +1,16 @@
 import axios from "axios";
 
 const API_URL =
-    import.meta.env.VITE_API_URL ||
-    "https://quick-fix-1.onrender.com";
+  import.meta.env.VITE_API_URL ||
+  "https://quick-fix-1.onrender.com";
 
 console.log("🔥 API_URL:", API_URL);
 
 const api = axios.create({
-    baseURL: API_URL,
-    headers: {
-        "Content-Type": "application/json",
-    },
+  baseURL: "https://YOUR-BACKEND-URL.onrender.com",
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 const getAccessToken = () => {
   return sessionStorage.getItem("accessToken");
