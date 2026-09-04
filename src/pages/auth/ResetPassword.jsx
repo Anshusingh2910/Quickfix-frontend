@@ -1,147 +1,269 @@
-import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+
 import {
   ArrowLeft,
   CheckCircle2,
   Eye,
   EyeOff,
-  LockKeyhole,
+  KeyRound,
   ShieldCheck,
+  Wrench,
+  UserRound,
 } from "lucide-react";
 
-import { resetPassword } from "../../services/authApi";
-import { mechanicResetPassword } from "../../services/mechanicApi";
+import {
+  resetPassword,
+} from "../../services/authApi";
+
+import {
+  mechanicResetPassword,
+} from "../../services/mechanicApi";
 
 function ResetPassword() {
   const navigate = useNavigate();
   const location = useLocation();
 
   // =====================================================
-  // ROLE
-  // =====================================================
-
-  const pendingRole =
-    location.state?.role ||
-    localStorage.getItem("pendingAuthRole") ||
-    "user";
-
-  const isMechanic = pendingRole === "mechanic";
-
-  // =====================================================
   // FORM
   // =====================================================
 
-  const [formData, setFormData] = useState({
-    password: "",
-    confirmPassword: "",
-  });
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] =
+    useState("");
 
-  const [showPassword, setShowPassword] = useState(false);
+  // =====================================================
+  // UI
+  // =====================================================
+
+  const [showPassword, setShowPassword] =
+    useState(false);
+
   const [showConfirmPassword, setShowConfirmPassword] =
     useState(false);
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  const [success, setSuccess] =
+    useState("");
 
   // =====================================================
-  // HANDLE CHANGE
+  // SESSION
   // =====================================================
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
+  const email =
+    location.state?.email ||
+    sessionStorage.getItem(
+      "passwordResetEmail"
+    ) ||
+    "";
 
-    setFormData((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
+  const role =
+    location.state?.role ||
+    sessionStorage.getItem(
+      "passwordResetRole"
+    ) ||
+    "";
+
+  const resetToken =
+    sessionStorage.getItem(
+      "passwordResetToken"
+    );
+
+  const isMechanic =
+    role === "mechanic";
+
+  // =====================================================
+  // INITIAL CHECK
+  // =====================================================
+
+  useEffect(() => {
+    if (!resetToken) {
+      setError(
+        "Password reset session has expired. Please request OTP again."
+      );
+    }
+
+    if (
+      role !== "user" &&
+      role !== "mechanic"
+    ) {
+      setError(
+        "Invalid password reset account type. Please request OTP again."
+      );
+    }
+
+    if (!email) {
+      setError(
+        "Password reset email was not found. Please request OTP again."
+      );
+    }
+  }, [
+    resetToken,
+    role,
+    email,
+  ]);
+
+  // =====================================================
+  // PASSWORD CHANGE
+  // =====================================================
+
+  const handlePasswordChange = (
+    event
+  ) => {
+    setPassword(
+      event.target.value
+    );
 
     setError("");
     setSuccess("");
   };
 
   // =====================================================
-  // VALIDATION
+  // CONFIRM PASSWORD CHANGE
   // =====================================================
 
-  const validateForm = () => {
-    const { password, confirmPassword } = formData;
+  const handleConfirmPasswordChange = (
+    event
+  ) => {
+    setConfirmPassword(
+      event.target.value
+    );
 
-    if (!password) {
-      return "New password is required.";
-    }
-
-    if (password.length < 6) {
-      return "Password must be at least 6 characters.";
-    }
-
-    if (!confirmPassword) {
-      return "Please confirm your new password.";
-    }
-
-    if (password !== confirmPassword) {
-      return "Passwords do not match.";
-    }
-
-    return "";
+    setError("");
+    setSuccess("");
   };
 
   // =====================================================
   // SUBMIT
   // =====================================================
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (
+    event
+  ) => {
     event.preventDefault();
 
     setError("");
     setSuccess("");
 
-    const validationError = validateForm();
+    // ===================================================
+    // SESSION VALIDATION
+    // ===================================================
 
-    if (validationError) {
-      setError(validationError);
+    if (!resetToken) {
+      setError(
+        "Password reset session has expired. Please request OTP again."
+      );
+
+      return;
+    }
+
+    if (
+      role !== "user" &&
+      role !== "mechanic"
+    ) {
+      setError(
+        "Invalid password reset account type."
+      );
+
+      return;
+    }
+
+    if (!email) {
+      setError(
+        "Password reset email was not found."
+      );
+
       return;
     }
 
     // ===================================================
-    // GET RESET / VERIFICATION TOKEN
+    // PASSWORD VALIDATION
     // ===================================================
 
-    const resetToken =
-      localStorage.getItem("verificationToken") ||
-      localStorage.getItem("resetToken");
-
-    if (!resetToken) {
+    if (!password) {
       setError(
-        "Password reset session has expired. Please request a new OTP."
+        "Please enter your new password."
       );
+
+      return;
+    }
+
+    if (password.length < 8) {
+      setError(
+        "Password must be at least 8 characters long."
+      );
+
+      return;
+    }
+
+    if (!confirmPassword) {
+      setError(
+        "Please confirm your new password."
+      );
+
+      return;
+    }
+
+    if (
+      password !== confirmPassword
+    ) {
+      setError(
+        "Passwords do not match."
+      );
+
       return;
     }
 
     try {
       setLoading(true);
 
-      const data = {
-        password: formData.password,
-        confirmPassword: formData.confirmPassword,
-      };
-
-      // =================================================
-      // ROLE BASED API
-      // =================================================
-
       let response;
 
-      if (isMechanic) {
-        response = await mechanicResetPassword(
-          data,
-          resetToken
+      // =================================================
+      // CUSTOMER
+      // =================================================
+
+      if (role === "user") {
+        console.log(
+          "RESETTING CUSTOMER PASSWORD"
         );
-      } else {
-        response = await resetPassword(
-          data,
-          resetToken
+
+        response =
+          await resetPassword(
+            {
+              password,
+              confirmPassword,
+            },
+            resetToken
+          );
+      }
+
+      // =================================================
+      // MECHANIC
+      // =================================================
+
+      if (role === "mechanic") {
+        console.log(
+          "RESETTING MECHANIC PASSWORD"
         );
+
+        response =
+          await mechanicResetPassword(
+            {
+              password,
+              confirmPassword,
+            },
+            resetToken
+          );
       }
 
       console.log(
@@ -149,32 +271,50 @@ function ResetPassword() {
         response
       );
 
+      // =================================================
+      // SUCCESS
+      // =================================================
+
       setSuccess(
         response?.message ||
-          "Password reset successfully."
+        response?.data?.message ||
+        "Password changed successfully."
       );
 
       // =================================================
-      // REMOVE RESET DATA
+      // CLEAR RESET SESSION
       // =================================================
 
-      localStorage.removeItem("verificationToken");
-      localStorage.removeItem("resetToken");
-      localStorage.removeItem("pendingAuthRole");
+      sessionStorage.removeItem(
+        "passwordResetToken"
+      );
+
+      sessionStorage.removeItem(
+        "passwordResetRole"
+      );
+
+      sessionStorage.removeItem(
+        "passwordResetEmail"
+      );
 
       // =================================================
-      // REDIRECT LOGIN
+      // LOGIN
       // =================================================
 
       setTimeout(() => {
-        navigate("/login", {
-          state: {
-            role: pendingRole,
-            message:
-              "Password reset successfully. Please login with your new password.",
-          },
-        });
-      }, 1500);
+        navigate(
+          "/login",
+          {
+            replace: true,
+            state: {
+              email,
+              role,
+              passwordReset: true,
+            },
+          }
+        );
+      }, 1200);
+
     } catch (err) {
       console.error(
         "RESET PASSWORD ERROR:",
@@ -182,17 +322,19 @@ function ResetPassword() {
       );
 
       console.error(
-        "RESET PASSWORD RESPONSE ERROR:",
+        "RESET PASSWORD RESPONSE:",
         err?.response?.data
       );
 
       const message =
         err?.response?.data?.message ||
         err?.response?.data?.error ||
+        err?.response?.data?.data?.message ||
         err?.message ||
         "Unable to reset password. Please try again.";
 
       setError(message);
+
     } finally {
       setLoading(false);
     }
@@ -205,66 +347,76 @@ function ResetPassword() {
   return (
     <div className="w-full">
 
-      {/* =================================================
-          HEADER
-      ================================================= */}
+      {/* HEADER */}
 
-      <div className="mb-8">
-
-        <Link
-          to="/login"
-          className="
-            mb-6
-            inline-flex
-            items-center
-            gap-2
-            text-sm
-            font-medium
-            text-slate-500
-            transition
-            hover:text-blue-600
-          "
-        >
-          <ArrowLeft size={16} />
-
-          Back to login
-        </Link>
-
-        {/* ICON */}
+      <div className="mb-8 text-center">
 
         <div
           className="
+            mx-auto
             mb-5
             flex
-            h-14
-            w-14
+            h-16
+            w-16
             items-center
             justify-center
             rounded-2xl
             bg-blue-50
             text-blue-600
+            shadow-sm
           "
         >
-          <LockKeyhole
-            size={27}
-            strokeWidth={1.8}
-          />
+          {isMechanic ? (
+            <Wrench
+              size={30}
+              strokeWidth={1.8}
+            />
+          ) : (
+            <KeyRound
+              size={30}
+              strokeWidth={1.8}
+            />
+          )}
         </div>
 
-        {/* ROLE */}
+        <div
+          className="
+            mb-2
+            flex
+            items-center
+            justify-center
+            gap-2
+          "
+        >
+          {isMechanic ? (
+            <Wrench
+              size={15}
+              className="text-blue-600"
+            />
+          ) : (
+            <UserRound
+              size={15}
+              className="text-blue-600"
+            />
+          )}
 
-        <p className="mb-2 text-sm font-semibold text-blue-600">
-          {isMechanic
-            ? "Mechanic account"
-            : "Customer account"}
-        </p>
-
-        {/* TITLE */}
+          <span
+            className="
+              text-sm
+              font-semibold
+              text-blue-600
+            "
+          >
+            {isMechanic
+              ? "Mechanic password reset"
+              : "Customer password reset"}
+          </span>
+        </div>
 
         <h1
           className="
             text-3xl
-            font-bold
+            font-extrabold
             tracking-tight
             text-slate-900
           "
@@ -274,21 +426,56 @@ function ResetPassword() {
 
         <p
           className="
-            mt-2
+            mx-auto
+            mt-3
+            max-w-sm
             text-sm
             leading-6
             text-slate-500
           "
         >
-          Create a strong new password for your{" "}
-          {isMechanic ? "mechanic" : "customer"} account.
+          Enter a new password for your account.
         </p>
+
+        {email && (
+          <div
+            className="
+              mx-auto
+              mt-4
+              flex
+              w-fit
+              items-center
+              gap-2
+              rounded-lg
+              bg-slate-50
+              px-3
+              py-2
+              text-xs
+              font-medium
+              text-slate-600
+            "
+          >
+            {isMechanic ? (
+              <Wrench
+                size={14}
+                className="text-slate-400"
+              />
+            ) : (
+              <UserRound
+                size={14}
+                className="text-slate-400"
+              />
+            )}
+
+            <span>
+              {email}
+            </span>
+          </div>
+        )}
 
       </div>
 
-      {/* =================================================
-          ERROR
-      ================================================= */}
+      {/* ERROR */}
 
       {error && (
         <div
@@ -310,9 +497,7 @@ function ResetPassword() {
         </div>
       )}
 
-      {/* =================================================
-          SUCCESS
-      ================================================= */}
+      {/* SUCCESS */}
 
       {success && (
         <div
@@ -320,7 +505,7 @@ function ResetPassword() {
             mb-5
             flex
             items-start
-            gap-2
+            gap-3
             rounded-xl
             border
             border-emerald-100
@@ -329,7 +514,6 @@ function ResetPassword() {
             py-3
             text-sm
             font-medium
-            leading-5
             text-emerald-600
           "
         >
@@ -338,22 +522,20 @@ function ResetPassword() {
             className="mt-0.5 shrink-0"
           />
 
-          <span>{success}</span>
+          <p>
+            {success}
+          </p>
         </div>
       )}
 
-      {/* =================================================
-          FORM
-      ================================================= */}
+      {/* FORM */}
 
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col gap-5"
+        className="space-y-5"
       >
 
-        {/* =================================================
-            NEW PASSWORD
-        ================================================= */}
+        {/* PASSWORD */}
 
         <div>
 
@@ -372,7 +554,7 @@ function ResetPassword() {
 
           <div className="relative">
 
-            <LockKeyhole
+            <KeyRound
               size={18}
               className="
                 pointer-events-none
@@ -386,14 +568,15 @@ function ResetPassword() {
 
             <input
               id="password"
-              name="password"
               type={
                 showPassword
                   ? "text"
                   : "password"
               }
-              value={formData.password}
-              onChange={handleChange}
+              value={password}
+              onChange={
+                handlePasswordChange
+              }
               placeholder="Enter new password"
               autoComplete="new-password"
               disabled={loading}
@@ -425,31 +608,20 @@ function ResetPassword() {
               type="button"
               onClick={() =>
                 setShowPassword(
-                  (previous) => !previous
+                  (value) => !value
                 )
               }
               disabled={loading}
               className="
                 absolute
-                right-2
+                right-3
                 top-1/2
-                flex
-                h-8
-                w-8
                 -translate-y-1/2
-                items-center
-                justify-center
-                rounded-lg
+                p-1
                 text-slate-400
                 transition
-                hover:bg-slate-100
                 hover:text-slate-600
               "
-              aria-label={
-                showPassword
-                  ? "Hide password"
-                  : "Show password"
-              }
             >
               {showPassword ? (
                 <EyeOff size={18} />
@@ -460,11 +632,19 @@ function ResetPassword() {
 
           </div>
 
+          <p
+            className="
+              mt-2
+              text-xs
+              text-slate-400
+            "
+          >
+            Password must be at least 8 characters.
+          </p>
+
         </div>
 
-        {/* =================================================
-            CONFIRM PASSWORD
-        ================================================= */}
+        {/* CONFIRM PASSWORD */}
 
         <div>
 
@@ -483,7 +663,7 @@ function ResetPassword() {
 
           <div className="relative">
 
-            <LockKeyhole
+            <KeyRound
               size={18}
               className="
                 pointer-events-none
@@ -497,14 +677,15 @@ function ResetPassword() {
 
             <input
               id="confirmPassword"
-              name="confirmPassword"
               type={
                 showConfirmPassword
                   ? "text"
                   : "password"
               }
-              value={formData.confirmPassword}
-              onChange={handleChange}
+              value={confirmPassword}
+              onChange={
+                handleConfirmPasswordChange
+              }
               placeholder="Confirm new password"
               autoComplete="new-password"
               disabled={loading}
@@ -536,31 +717,20 @@ function ResetPassword() {
               type="button"
               onClick={() =>
                 setShowConfirmPassword(
-                  (previous) => !previous
+                  (value) => !value
                 )
               }
               disabled={loading}
               className="
                 absolute
-                right-2
+                right-3
                 top-1/2
-                flex
-                h-8
-                w-8
                 -translate-y-1/2
-                items-center
-                justify-center
-                rounded-lg
+                p-1
                 text-slate-400
                 transition
-                hover:bg-slate-100
                 hover:text-slate-600
               "
-              aria-label={
-                showConfirmPassword
-                  ? "Hide password"
-                  : "Show password"
-              }
             >
               {showConfirmPassword ? (
                 <EyeOff size={18} />
@@ -573,36 +743,18 @@ function ResetPassword() {
 
         </div>
 
-        {/* =================================================
-            PASSWORD INFO
-        ================================================= */}
-
-        <div
-          className="
-            rounded-xl
-            border
-            border-slate-100
-            bg-slate-50
-            px-4
-            py-3
-          "
-        >
-          <p className="text-xs leading-5 text-slate-500">
-            Password must contain at least 6
-            characters.
-          </p>
-        </div>
-
-        {/* =================================================
-            SUBMIT
-        ================================================= */}
+        {/* SUBMIT */}
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={
+            loading ||
+            !resetToken ||
+            !email ||
+            !role
+          }
           className="
             flex
-            h-12
             w-full
             items-center
             justify-center
@@ -610,28 +762,25 @@ function ResetPassword() {
             rounded-xl
             bg-blue-600
             px-5
+            py-3.5
             text-sm
             font-semibold
             text-white
             shadow-lg
-            shadow-blue-600/20
+            shadow-blue-500/20
             transition-all
             duration-200
             hover:bg-blue-700
             hover:shadow-xl
-            active:scale-[0.99]
             disabled:cursor-not-allowed
             disabled:opacity-60
           "
         >
           {loading ? (
-            "Resetting password..."
+            "Changing password..."
           ) : (
             <>
-              <span>
-                Reset Password
-              </span>
-
+              Change password
               <CheckCircle2 size={18} />
             </>
           )}
@@ -639,9 +788,7 @@ function ResetPassword() {
 
       </form>
 
-      {/* =================================================
-          SECURITY
-      ================================================= */}
+      {/* SECURITY */}
 
       <div
         className="
@@ -651,7 +798,7 @@ function ResetPassword() {
           justify-center
           gap-2
           text-xs
-          text-slate-400
+          text-gray-400
         "
       >
         <ShieldCheck
@@ -659,7 +806,36 @@ function ResetPassword() {
           className="text-blue-500"
         />
 
-        Your account information is secure
+        Your password is securely encrypted
+      </div>
+
+      {/* BACK */}
+
+      <div
+        className="
+          mt-7
+          border-t
+          border-slate-100
+          pt-6
+          text-center
+        "
+      >
+        <Link
+          to="/login"
+          className="
+            inline-flex
+            items-center
+            gap-2
+            text-sm
+            font-semibold
+            text-slate-500
+            transition
+            hover:text-blue-600
+          "
+        >
+          <ArrowLeft size={16} />
+          Back to login
+        </Link>
       </div>
 
     </div>

@@ -523,9 +523,9 @@ function UserDashboard() {
                             </p>
 
                         </Link>
-
+                
                         <Link
-                            to="/ai-chat"
+                            to="/AIassistant"
                             className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
                         >
                             <div className="mb-5 flex items-center justify-between">

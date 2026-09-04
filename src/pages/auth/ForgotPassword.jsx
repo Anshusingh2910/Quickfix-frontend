@@ -110,7 +110,7 @@ function ForgotPassword() {
     const normalizedEmail = email.trim().toLowerCase();
 
     // -----------------------------------------------------
-    // EXPECTED ROLE
+    // ROLE
     // -----------------------------------------------------
 
     const expectedRole =
@@ -137,7 +137,7 @@ function ForgotPassword() {
         "passwordResetEmail"
       );
 
-      // Registration data should not interfere
+      // Registration session should not interfere
       sessionStorage.removeItem(
         "verificationToken"
       );
@@ -182,16 +182,14 @@ function ForgotPassword() {
       );
 
       // ===================================================
-      // GET TOKEN
+      // BACKEND RETURNS `token`
       // ===================================================
 
       const resetToken =
+        response?.token ||
+        response?.data?.token ||
         response?.resetToken ||
         response?.data?.resetToken ||
-        response?.data?.data?.resetToken ||
-        response?.verificationToken ||
-        response?.data?.verificationToken ||
-        response?.data?.data?.verificationToken ||
         null;
 
       console.log(
@@ -200,15 +198,23 @@ function ForgotPassword() {
       );
 
       // ===================================================
-      // SAVE RESET SESSION
+      // TOKEN CHECK
       // ===================================================
 
-      if (resetToken) {
-        sessionStorage.setItem(
-          "passwordResetToken",
-          resetToken
+      if (!resetToken) {
+        throw new Error(
+          "Password reset token was not received from server."
         );
       }
+
+      // ===================================================
+      // SAVE PASSWORD RESET SESSION
+      // ===================================================
+
+      sessionStorage.setItem(
+        "passwordResetToken",
+        resetToken
+      );
 
       sessionStorage.setItem(
         "passwordResetRole",
@@ -375,10 +381,9 @@ function ForgotPassword() {
               text-sm
               font-semibold
               transition-all
-              ${
-                resetType === "user"
-                  ? "border-blue-500 bg-blue-50 text-blue-600 ring-2 ring-blue-500/10"
-                  : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+              ${resetType === "user"
+                ? "border-blue-500 bg-blue-50 text-blue-600 ring-2 ring-blue-500/10"
+                : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
               }
               disabled:cursor-not-allowed
               disabled:opacity-60
@@ -407,10 +412,9 @@ function ForgotPassword() {
               text-sm
               font-semibold
               transition-all
-              ${
-                resetType === "mechanic"
-                  ? "border-blue-500 bg-blue-50 text-blue-600 ring-2 ring-blue-500/10"
-                  : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+              ${resetType === "mechanic"
+                ? "border-blue-500 bg-blue-50 text-blue-600 ring-2 ring-blue-500/10"
+                : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
               }
               disabled:cursor-not-allowed
               disabled:opacity-60
@@ -630,6 +634,7 @@ function ForgotPassword() {
           text-center
         "
       >
+
         {resetType === "mechanic" ? (
           <p className="text-sm text-slate-500">
             Don't have a mechanic account?{" "}
@@ -661,6 +666,7 @@ function ForgotPassword() {
             </Link>
           </p>
         )}
+
       </div>
 
     </div>

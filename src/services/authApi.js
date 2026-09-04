@@ -24,21 +24,15 @@ export const forgotPassword = async (data) => {
 
   return response.data;
 };
-export const verifyOTP = async (
-  otp,
-  token
-) => {
+
+export const verifyOTP = async (otp, token) => {
   if (!token) {
-    throw new Error(
-      "Verification token is required."
-    );
+    throw new Error("Verification token is required.");
   }
 
   const response = await api.post(
     "/user/verify-otp",
-    {
-      otp,
-    },
+    { otp },
     {
       headers: {
         Authorization: token,
@@ -48,14 +42,12 @@ export const verifyOTP = async (
 
   return response.data;
 };
-export const resendOTP = async (
-  token
-) => {
+
+export const resendOTP = async (token) => {
   if (!token) {
-    throw new Error(
-      "Verification token is required."
-    );
+    throw new Error("Verification token is required.");
   }
+
   const response = await api.post(
     "/user/resend-otp",
     {},
@@ -65,13 +57,13 @@ export const resendOTP = async (
       },
     }
   );
+
   return response.data;
 };
+
 export const resetPassword = async (data, token) => {
   if (!token) {
-    throw new Error(
-      "Reset password token is required."
-    );
+    throw new Error("Reset password token is required.");
   }
 
   const response = await api.put(
