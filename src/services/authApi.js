@@ -138,7 +138,7 @@ export const updateVehicle = async (id, data) => {
 
 export const deleteVehicle = async (id) => {
   const response = await api.delete(
-    `/vehicles/delete/${id}`
+    `/vehicle/delete/${id}`
   );
 
   return response.data;
