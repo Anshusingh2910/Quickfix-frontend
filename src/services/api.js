@@ -7,7 +7,7 @@ const API_URL =
 console.log("🔥 API_URL:", API_URL);
 
 const api = axios.create({
-  baseURL: "https://YOUR-BACKEND-URL.onrender.com",
+  baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },
