@@ -17,6 +17,7 @@ import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import VerifyOTP from "../pages/auth/VerifyOTP";
 import ForgotPassword from "../pages/auth/ForgotPassword";
+import ResetPassword from "../pages/auth/ResetPassword";
 
 // User Pages
 import UserDashboard from "../pages/user/Dashboard";
@@ -235,6 +236,10 @@ function AppRoutes() {
                         element={<ForgotPassword />}
                     />
 
+                    <Route
+                        path="/reset-password"
+                        element={<ResetPassword />}
+                    />
                 </Route>
 
                 {/* =================================================
