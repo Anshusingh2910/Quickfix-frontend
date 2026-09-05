@@ -61,11 +61,26 @@ export const resendOTP = async (token) => {
   return response.data;
 };
 
-export const resetPassword = async ({ token, newPassword }) => {
-  const response = await api.post("/user/reset-password", {
-    token,
-    newPassword,
-  });
+export const resetPassword = async (
+  { password, confirmPassword },
+  token
+) => {
+  if (!token) {
+    throw new Error("Reset token is required.");
+  }
+
+  const response = await api.post(
+    "/user/reset-password",
+    {
+      password,
+      confirmPassword,
+    },
+    {
+      headers: {
+        Authorization: token,
+      },
+    }
+  );
 
   return response.data;
 };
