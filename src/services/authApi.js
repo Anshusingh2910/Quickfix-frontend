@@ -69,7 +69,7 @@ export const resetPassword = async (
     throw new Error("Reset token is required.");
   }
 
-  const response = await api.post(
+  const response = await api.put(
     "/user/reset-password",
     {
       password,
